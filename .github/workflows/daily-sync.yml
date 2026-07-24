@@ -26,6 +26,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install openpyxl
 
+      - name: Refetch Live Catalog Products from WeLast API
+        env:
+          WELAST_REFRESH_TOKEN: ${{ secrets.WELAST_REFRESH_TOKEN }}
+        run: |
+          python3 backend/refetch_products.py
+
       - name: Refetch Live Campaign Data from WeLast API
         env:
           WELAST_REFRESH_TOKEN: ${{ secrets.WELAST_REFRESH_TOKEN }}
@@ -44,5 +50,5 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.js data.json dash.js dash.json share.html dashboard_share.html index.html dashboard.html backend/raw/campaigns.json
-          git diff-index --quiet HEAD || (git commit -m "auto: daily WeLast campaign sync [skip ci]" && git push)
+          git add data.js data.json dash.js dash.json share.html dashboard_share.html index.html dashboard.html backend/raw/products.json backend/raw/campaigns.json
+          git diff-index --quiet HEAD || (git commit -m "auto: daily WeLast catalog & campaign sync [skip ci]" && git push)
