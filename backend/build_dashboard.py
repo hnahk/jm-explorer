@@ -56,7 +56,14 @@ def mkrange(sn):
         ld=calendar.monthrange(yr,mo)[1]; return (date(yr,mo,min((w1-1)*7+1,ld)), date(yr,mo,min(w2*7,ld)))
     except: return None
 plan_rows=[]; week_meta={}
-wb=load_workbook(PLAN_XLSX, data_only=True)
+try:
+    wb=load_workbook(PLAN_XLSX, data_only=True)
+except Exception as e:
+    print(f"Warning: could not load plan {PLAN_XLSX}: {e}")
+    class DummyWB:
+        sheetnames = []
+        def close(self): pass
+    wb = DummyWB()
 for sn in wb.sheetnames:
     ws=wb[sn]; hr=qi=ci=ni=pi=pti=pici=pendi=None
     for r in range(1,4):
