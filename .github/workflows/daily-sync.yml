@@ -1,0 +1,48 @@
+name: Daily WeLast Data Sync
+
+on:
+  schedule:
+    # Runs every day at 02:00 UTC (09:00 AM ICT)
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl
+
+      - name: Refetch Live Campaign Data from WeLast API
+        env:
+          WELAST_REFRESH_TOKEN: ${{ secrets.WELAST_REFRESH_TOKEN }}
+        run: |
+          python3 backend/refetch_campaigns.py
+
+      - name: Rebuild Explorer & Dashboard Standalone Files
+        run: |
+          python3 backend/build.py
+          python3 backend/build_dashboard.py
+          python3 backend/build_share.py
+          cp share.html index.html
+          cp dashboard_share.html dashboard.html
+
+      - name: Commit & Push Live Updated Data
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.js data.json dash.js dash.json share.html dashboard_share.html index.html dashboard.html backend/raw/campaigns.json
+          git diff-index --quiet HEAD || (git commit -m "auto: daily WeLast campaign sync [skip ci]" && git push)

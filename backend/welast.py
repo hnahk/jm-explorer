@@ -1,0 +1,27 @@
+"""Shared helper: refresh access token + call base.welast.vn via curl."""
+import json, subprocess, os
+
+DEFAULT_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImtoYW5obG1Ad2VsYXN0LnZuIiwiaXNBZG1pbiI6ZmFsc2UsInVzZXJuYW1lIjoibWFpX2xhbV9raGFuaCIsImlhdCI6MTc4NDUxMjc3MCwiZXhwIjoxNzg1MTE3NTcwfQ.5nn3AU52TQgIqRFAYk1j4XYyinOAbZffO83wLNs_szI"
+REFRESH_TOKEN = os.environ.get("WELAST_REFRESH_TOKEN", DEFAULT_REFRESH_TOKEN)
+BASE = "https://base.welast.vn"
+
+def get_token():
+    cmd = ["curl", "-s", "-X", "POST", f"{BASE}/auth/refresh-token",
+           "-H", "accept: application/json", "-H", "content-type: application/json",
+           "-H", "origin: https://data.welast.vn",
+           "-H", f"cookie: refreshToken={REFRESH_TOKEN}",
+           "--data", json.dumps({"refreshToken": REFRESH_TOKEN})]
+    out = subprocess.check_output(cmd, timeout=60).decode().strip()
+    if out.startswith('"'):
+        out = json.loads(out)
+    elif out.startswith("{"):
+        d = json.loads(out)
+        out = d.get("accessToken") or d.get("token") or d.get("access_token")
+    return out
+
+def get(path, token):
+    cmd = ["curl", "-s", f"{BASE}{path}",
+           "-H", "accept: application/json", "-H", "origin: https://data.welast.vn",
+           "-H", f"authorization: Bearer {token}"]
+    out = subprocess.check_output(cmd, timeout=90)
+    return json.loads(out)
