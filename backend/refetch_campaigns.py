@@ -26,5 +26,7 @@ for m in range(1, END.month + 1):
         if page*500>=tot or not d.get("campaigns"): break
         page+=1
     out[key]=rows
-json.dump(out, open(os.path.join(os.path.dirname(__file__),"raw","campaigns.json"),"w"))
+raw_dir = os.path.join(os.path.dirname(__file__), "raw")
+os.makedirs(raw_dir, exist_ok=True)
+json.dump(out, open(os.path.join(raw_dir, "campaigns.json"), "w"))
 print("DONE", sum(len(v) for v in out.values()), "rows")

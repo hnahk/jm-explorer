@@ -29,9 +29,11 @@ def refetch():
             break
         page += 1
 
-    out_path = os.path.join(os.path.dirname(__file__), "raw", "products.json")
-    with open(out_path, "w") as f:
-        json.dump(all_products, f, indent=2)
+    raw_dir = os.path.join(os.path.dirname(__file__), "raw")
+    os.makedirs(raw_dir, exist_ok=True)
+    out_path = os.path.join(raw_dir, "products.json")
+    with open(out_path, "w") as fp:
+        json.dump(all_products, fp, indent=2)
     print(f"DONE: Saved {len(all_products)} products to {out_path}", file=sys.stderr)
 
 if __name__ == "__main__":
