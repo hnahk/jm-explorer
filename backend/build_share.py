@@ -32,14 +32,17 @@ camps = {code: [cr(code, r) for r in rows] for code, rows in J["campaigns"].item
 
 slim = {"summary": J["summary"], "edges": J["edges"], "recipient_plan": J["recipient_plan"], "plan_weeks": J["plan_weeks"],
         "designs": designs, "campaigns": camps,
-        "note": "SHARED: all advertised designs (never-advertised catalog designs omitted). Ad-creative thumbnails kept for winners+losers only; full set is in the local explorer.html."}
+        "note": "SHARED: all advertised designs (never-advertised catalog designs omitted). Ad-creative thumbnails kept for winners+losers only; full set is in the local app.html."}
 slimjson = json.dumps(slim, ensure_ascii=False, separators=(",", ":"))
+dashjson = open(os.path.join(ROOT, "dash.json"), encoding="utf-8").read()
 
-h = open(os.path.join(ROOT, "explorer.html"), encoding="utf-8").read()
-style = re.search(r"<style>[\s\S]*?</style>", h).group(0)
-markup = h.split("<body>", 1)[1].split('<script src="data.js">', 1)[0]
-app = re.findall(r"<script>([\s\S]*?)</script>", h)[-1]
+h = open(os.path.join(ROOT, "app.html"), encoding="utf-8").read()
+# Replace the script src tags with inline data
+h = h.replace('<script src="dash.js"></script>', f'<script>window.DASH={dashjson};</script>')
+h = h.replace('<script src="data.js"></script>', f'<script>window.JM={slimjson};</script>')
+
 banner = '<div style="background:var(--warnbg);color:var(--warn);padding:6px 18px;font-size:12px;border-bottom:1px solid var(--line)">Shared view · all advertised designs · ad-creative thumbnails shown for winners + losers</div>'
-share = style + "\n" + banner + markup + "<script>window.JM=" + slimjson + ";</script>\n<script>" + app + "</script>"
-open(os.path.join(ROOT, "share.html"), "w", encoding="utf-8").write(share)
-print("share.html: %.2f MB (designs %d, campaigns %d)" % (os.path.getsize(os.path.join(ROOT, "share.html"))/1e6, len(designs), sum(len(v) for v in camps.values())))
+h = h.replace('<body>', '<body>\n' + banner)
+
+open(os.path.join(ROOT, "share.html"), "w", encoding="utf-8").write(h)
+print("share.html (unified): %.2f MB (designs %d, campaigns %d)" % (os.path.getsize(os.path.join(ROOT, "share.html"))/1e6, len(designs), sum(len(v) for v in camps.values())))

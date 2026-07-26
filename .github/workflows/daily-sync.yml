@@ -38,10 +38,15 @@ jobs:
         run: |
           python3 backend/refetch_campaigns.py
 
+      - name: Fetch Latest Orders (Incremental)
+        env:
+          WELAST_REFRESH_TOKEN: ${{ secrets.WELAST_REFRESH_TOKEN }}
+        run: |
+          python3 backend/fetch_orders.py
+
       - name: Rebuild Explorer & Dashboard Standalone Files
         run: |
           python3 backend/build.py
-          python3 backend/build_dashboard.py
           python3 backend/build_share.py
           cp share.html index.html
           cp dashboard_share.html dashboard.html
@@ -50,5 +55,5 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.js data.json dash.js dash.json share.html dashboard_share.html index.html dashboard.html backend/raw/products.json backend/raw/campaigns.json
-          git diff-index --quiet HEAD || (git commit -m "auto: daily WeLast catalog & campaign sync [skip ci]" && git push)
+          git add data.js data.json dash.js dash.json share.html dashboard_share.html index.html dashboard.html backend/raw/products.json backend/raw/campaigns.json backend/raw/orders.json
+          git diff-index --quiet HEAD || (git commit -m "auto: daily WeLast catalog, campaigns & orders sync [skip ci]" && git push)

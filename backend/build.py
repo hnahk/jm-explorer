@@ -249,6 +249,25 @@ for m, cs in camps.items():
                'spend': sp, 'rev': rv, 'orders': od, 'impr': im, 'clk': cl, 'fb': str(c.get('fbId') or ''), 'thumb': c.get('thumbnail') or ''}
         seen[uid] = row; camp_by_code[cc].append(row)
 
+# ---------- 5.b. SHOPIFY ORDERS (true net revenue & FBT) ----------
+shop_stats = defaultdict(lambda: {'orders': 0, 'net_rev': 0.0, 'items': defaultdict(int)})
+if os.path.exists(os.path.join(RAW, "orders.json")):
+    try:
+        orders_data = json.load(open(os.path.join(RAW, "orders.json")))
+        for m, olist in orders_data.items():
+            for o in olist:
+                dcodes = [dcode(c) for c in o.get('designCodes', [])]
+                dcodes = [c for c in dcodes if c]
+                net = float(o.get('totalPrice', 0)) - float(o.get('cogs', 0))
+                for c in set(dcodes):
+                    st = shop_stats[c]
+                    st['orders'] += 1
+                    st['net_rev'] += net
+                    for it in o.get('items', []):
+                        st['items'][it] += 1
+    except Exception as e:
+        print("Error parsing orders.json:", e)
+
 # ---------- assemble per-design records (the trace hub) ----------
 BREAKEVEN = 1.43
 def bucket(sp, rv, od):
@@ -270,6 +289,15 @@ for c in sorted(codes):
     if not pw: pw, pv = match_week(live_d), 'live'
     if not pw: pw, pv = match_week(ads), 'ads'
     if not pw: pv = None
+    
+    # Shopify Stats
+    sst = shop_stats.get(c, {'orders': 0, 'net_rev': 0.0, 'items': {}})
+    shop_orders = sst['orders']
+    shop_net_rev = sst['net_rev']
+    shop_net_aov = shop_net_rev / shop_orders if shop_orders > 0 else 0
+    # Top 3 FBT items (excluding the design's own main product if possible, but we'll just take top 3)
+    fbt = [k for k, v in sorted(sst['items'].items(), key=lambda x: -x[1])[:3]]
+
     designs.append({
         'code': c, 'has_idea': c in prod, 'full': (prod.get(c,{}).get('full_code') or (catc.get(c,{}) or {}).get('full') or camp_full.get(c) or c), 'idea': p.get('idea_name') or '', 'creator': p.get('creator') or '',
         'occasion': occ, 'niche': p.get('niche') or '', 'recipient': p.get('recipient') or '', 'rec': canon_rec(p.get('recipient')),
@@ -283,7 +311,9 @@ for c in sorted(codes):
         'spend': round(sp, 2), 'rev': round(rv, 2), 'profit': round(0.70 * rv - sp, 2),
         'roas': round(rv / sp, 3) if sp else 0, 'orders': od,
         'cpa': round(sp / od, 2) if od else None, 'ncamp': len(camp_by_code.get(c, [])),
-        'bucket': bucket(sp, rv, od)})
+        'bucket': bucket(sp, rv, od),
+        'shop_orders': shop_orders, 'shop_net_rev': round(shop_net_rev, 2), 'shop_net_aov': round(shop_net_aov, 2), 'fbt': fbt
+    })
 
 # keep only records whose listing went live on/after 1 Dec 2025 (align to the plan window; drop older products)
 CUTOFF = '2025-12-01'
