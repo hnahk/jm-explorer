@@ -246,6 +246,7 @@ document.getElementById('nav-dash').onclick = function() {
 
 (() => {
 const D=window.DASH;
+const $=s=>document.querySelector(s);
 const money=n=>(n<0?'-$':'$')+Math.abs(Math.round(n)).toLocaleString();
 const pct=n=>(n==null?'—':n+'%');
 const bar=(v,max,cls='')=>`<div class="bar ${cls}"><span style="width:${max?Math.max(1,Math.min(100,v/max*100)):0}%"></span></div>`;
