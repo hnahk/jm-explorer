@@ -338,7 +338,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     } else if (o.jm_timeline && o.jm_timeline.length) {
       h+=`<div class="sub" style="margin-bottom:6px">High-level timeline notes from the JM row in H1.2026 MASTERPLAN IDEA.</div>`;
       h+=`<table><thead><tr><th style="width:120px">Week</th><th>JM Planning Note</th></tr></thead><tbody>`+
-        o.jm_timeline.map(m=>`<tr><td style="white-space:nowrap;font-weight:600">${m.week}</td><td>${m.text}</td></tr>`).join('')+`</tbody></table>`;
+        o.jm_timeline.map(m=>`<tr><td style="white-space:nowrap;font-weight:600;vertical-align:top">${m.week}</td><td style="white-space:normal;line-height:1.5">${m.text}</td></tr>`).join('')+`</tbody></table>`;
     } else h+=`<div class="muted">No detailed masterplan sheet or timeline notes for this occasion.</div>`;
     h+=`</div>`;
     h+=`<div class="card"><h2 style="margin-top:0">② JM IDEA'S PLAN — detailed (${o.jm_plan.length} rows)${o.window?' · window '+o.window[0]+' → '+o.window[1]:''}</h2>
