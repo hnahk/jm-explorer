@@ -161,6 +161,11 @@ def build_dashboard():
                     "served": served
                 })
                 
+            m_spend = sum(d['spend'] or 0 for d in matched)
+            m_rev = sum(d['rev'] or 0 for d in matched)
+            m_profit = sum(d['profit'] or 0 for d in matched)
+            m_roas = round(m_rev / m_spend, 2) if m_spend else 0
+
             jm_plan.append({
                 "week": week,
                 "section": pr['section'],
@@ -171,6 +176,10 @@ def build_dashboard():
                 "pic": pr['pic'],
                 "created": pr['created'],
                 "pending": pr['pending'],
+                "m_spend": round(m_spend),
+                "m_rev": round(m_rev),
+                "m_profit": round(m_profit),
+                "m_roas": m_roas,
                 "matched": matched_formatted
             })
             
