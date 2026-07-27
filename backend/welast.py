@@ -2,7 +2,7 @@
 import json, subprocess, os
 
 DEFAULT_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImtoYW5obG1Ad2VsYXN0LnZuIiwiaXNBZG1pbiI6ZmFsc2UsInVzZXJuYW1lIjoibWFpX2xhbV9raGFuaCIsImlhdCI6MTc4NTEyMDkzMCwiZXhwIjoxNzg1NzI1NzMwfQ.hzzcDLyH3uynYsV4pqT7CjPZQDSzWTu7L5-_pLrjbi4"
-REFRESH_TOKEN = os.environ.get("WELAST_REFRESH_TOKEN") or DEFAULT_REFRESH_TOKEN
+REFRESH_TOKEN = DEFAULT_REFRESH_TOKEN
 BASE = "https://base.welast.vn"
 
 def get_token():
