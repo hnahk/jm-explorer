@@ -283,11 +283,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   let h=`<div class="card"><h2 style="margin-top:0">Funnel Overview</h2><div class="funnel">`+
     [['Created',f.created],['Live',f.live],['Advertised',f.advertised],['Profitable',f.profitable]]
     .map(([a,b],i)=>`${i?'<span style="color:var(--muted)">▸</span>':''}<span class="fstage">${a}<b class="num">${b.toLocaleString()}</b></span>`).join('')+`</div>`;
-  h+=`<h2>Spend by P0 Category</h2><div class="split">`+
-    [['Top products by spend',p.prod],['Spend by product type',p.pt],['Spend by PIC',p.pic]]
-    .map(([l,t])=>`<div class="card" style="padding:10px 14px"><div class="sub" style="margin-bottom:6px">${l}</div><table><tbody>`+
-      t.map(b=>`<tr><td style="width:120px;max-width:120px;overflow:hidden;text-overflow:ellipsis">${b.label}</td><td style="width:80px">${bar(b.spend,p.maxsp)}</td><td class="r num">${b.pct_spend}%</td></tr>`).join('')+`</tbody></table></div>`).join('')+`</div>`;
-  h+=`<div class="card"><h2 style="margin-top:0">Performance by Category Status</h2><div class="split">`+
+  h+=`<h2>Performance by Category Status</h2><div class="split">`+
     [['winner','Winners','tg-win'],['loser','Conclusive losers','tg-lose'],['untestable','Untestable (<20 ord)','']].map(([b,lab,cl])=>{
       const x=p[b]; return `<div class="card" style="margin:0"><span class="tag ${cl||'tg-lose'}">${lab}</span><div style="margin-top:6px"><b class="num">${x.n}</b> designs · ${money(x.spend)} spend · <span class="num ${x.profit<0?'neg':'pos'}">${money(x.profit)}</span></div></div>`;
     }).join('')+`</div></div>`;
