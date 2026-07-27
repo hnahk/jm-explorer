@@ -427,14 +427,14 @@ let state={view:'designs', q:'', filters:[], sortk:'spend', dir:-1, page:0, sel:
 
 // ---- header ----
 function header(){
-  const s=D.summary;
+  const s=D.overview.kpi;
   $('#stats').innerHTML=[
     ['Net profit', `<span class="${s.profit<0?'neg':'pos'}">${money(s.profit)}</span>`],
     ['Ad spend', money(s.spend)],['Revenue', money(s.rev)],
-    ['Designs', s.designs.toLocaleString()],['Advertised', s.advertised.toLocaleString()],
-    ['Breakeven ROAS', s.breakeven_roas]
+    ['Designs', D.overview.funnel.created.toLocaleString()],['Advertised', s.advertised.toLocaleString()],
+    ['Breakeven ROAS', s.breakeven]
   ].map(([k,v])=>`<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div></div>`).join('');
-  const f=s.funnel;
+  const f=D.overview.funnel;
   $('#funnel').innerHTML='<span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">Funnel</span>'+
     [['Created',f.created],['Live',f.live],['Advertised',f.advertised],['Profitable',f.profitable]]
     .map(([k,v],i)=>`${i?'<span class="arrow">▸</span>':''}<span class="fstage">${k} <b class="num">${v.toLocaleString()}</b></span>`).join('');
