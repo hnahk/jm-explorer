@@ -13,15 +13,23 @@ def get_token():
            "--data", json.dumps({"refreshToken": REFRESH_TOKEN})]
     out = subprocess.check_output(cmd, timeout=60).decode().strip()
     if out.startswith('"'):
-        out = json.loads(out)
+        return json.loads(out)
     elif out.startswith("{"):
         d = json.loads(out)
-        out = d.get("accessToken") or d.get("token") or d.get("access_token")
-    return out
+        token = d.get("accessToken") or d.get("token") or d.get("access_token")
+        if not token:
+            raise Exception(f"Failed to get token, WeLast API returned: {out}")
+        return token
+    raise Exception(f"Unexpected token response: {out}")
 
 def get(path, token):
+    if not token:
+        raise Exception("Cannot fetch from WeLast API: No access token provided.")
     cmd = ["curl", "-s", f"{BASE}{path}",
            "-H", "accept: application/json", "-H", "origin: https://data.welast.vn",
            "-H", f"authorization: Bearer {token}"]
-    out = subprocess.check_output(cmd, timeout=90)
-    return json.loads(out)
+    out = subprocess.check_output(cmd, timeout=90).decode().strip()
+    try:
+        return json.loads(out)
+    except json.JSONDecodeError:
+        raise Exception(f"WeLast API returned non-JSON response: {out[:100]}...")
