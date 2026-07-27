@@ -202,15 +202,20 @@ for o in OCC_ORDER:
     jm_plan=[]
     for pr in plan_rows:
         if o in row_occasions(pr) and (pr['planned'] or pr['product']):
-            cp=canon_product(pr['product']); wdw=occ_window(o) if o in OCC_DATE else None; picl=(pr['pic'] or '').lower()
-            def _m(d, cp=cp, wdw=wdw, picl=picl):
+            cp=canon_product(pr['product']); wdw=occ_window(o) if o in OCC_DATE else None
+            wm_match=re.match(r'(\d+)W', pr['week'])
+            p_mo=int(wm_match.group(1)) if wm_match else None
+            p_yr=(2025 if p_mo>=8 else 2026) if p_mo else None
+            p_T = date(p_yr, p_mo, 1) if p_mo else None
+            p_Tend = p_T + timedelta(days=21) if p_T else None
+            
+            def _m(d, cp=cp, p_T=p_T, p_Tend=p_Tend):
                 dl=dt(d.get('d_live'))
-                if wdw and not (dl and wdw[0]<=dl<=wdw[1]): return False
-                if picl and picl not in (d.get('creator') or '').lower(): return False
+                if p_T and not (dl and p_T<=dl<=p_Tend): return False
                 if cp!='Other' and canon_product(d['product'])!=cp: return False
                 return True
             matched=[d for d in ADV if _m(d)]
-            jm_plan.append({'section':pr.get('section',''),'product_type':pr.get('product_type',''),'product':pr['product'],'niche':pr['niche'],
+            jm_plan.append({'week':pr['week'],'section':pr.get('section',''),'product_type':pr.get('product_type',''),'product':pr['product'],'niche':pr['niche'],
                 'planned':pr['planned'],'pic':pr['pic'],'created':pr['created'],'pending':pr.get('pending',''),
                 'matched':[{'full':d.get('full') or d['code'],'idea':(d['idea'] or '')[:26],'link':d.get('link') or '','roas':d['roas'],'spend':round(d['spend']),
                     'served':((d.get('days_before_occ') is not None and d['days_before_occ']>=14) if o in OCC_DATE else None)} for d in sorted(matched,key=lambda d:-d['spend'])]})
