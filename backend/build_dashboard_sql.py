@@ -59,9 +59,11 @@ def build_dashboard():
     
     # Occasions stats
     c.execute('''
-        SELECT occasion, SUM(spend) as spend, SUM(rev) as rev, COUNT(*) as cnt 
-        FROM designs WHERE occasion IS NOT NULL 
-        GROUP BY occasion ORDER BY spend DESC
+        SELECT d.occasion, SUM(d.spend) as spend, SUM(d.rev) as rev, COUNT(*) as cnt 
+        FROM designs d
+        JOIN occasions o ON d.occasion = o.name
+        WHERE d.occasion IS NOT NULL 
+        GROUP BY d.occasion ORDER BY d.spend DESC
     ''')
     raw_occs = c.fetchall()
     
