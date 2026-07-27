@@ -335,7 +335,11 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     if(o.masterplan.length){
       h+=`<table><thead><tr><th>Sub-direction (angle)</th><th class="r">% planned</th><th class="r">Amazon search vol</th><th>Best rank</th></tr></thead><tbody>`+
         o.masterplan.map(m=>`<tr><td>${m.dir}</td><td class="r num">${m.pct!=null?m.pct+'%':'—'}</td><td class="r num">${m.searchvol?m.searchvol.toLocaleString():'—'}</td><td>${m.rank||'—'}</td></tr>`).join('')+`</tbody></table>`;
-    } else h+=`<div class="muted">No detailed masterplan sheet for this occasion (only Mother's Day &amp; Father's Day were fully speced in H1.2026 MASTERPLAN).</div>`;
+    } else if (o.jm_timeline && o.jm_timeline.length) {
+      h+=`<div class="sub" style="margin-bottom:6px">High-level timeline notes from the JM row in H1.2026 MASTERPLAN IDEA.</div>`;
+      h+=`<table><thead><tr><th style="width:120px">Week</th><th>JM Planning Note</th></tr></thead><tbody>`+
+        o.jm_timeline.map(m=>`<tr><td style="white-space:nowrap;font-weight:600">${m.week}</td><td>${m.text}</td></tr>`).join('')+`</tbody></table>`;
+    } else h+=`<div class="muted">No detailed masterplan sheet or timeline notes for this occasion.</div>`;
     h+=`</div>`;
     h+=`<div class="card"><h2 style="margin-top:0">② JM IDEA'S PLAN — detailed (${o.jm_plan.length} rows)${o.window?' · window '+o.window[0]+' → '+o.window[1]:''}</h2>
       <div class="sub" style="margin-bottom:6px">Click a row to reveal the matched idea codes (matched by week + product + PIC).</div>

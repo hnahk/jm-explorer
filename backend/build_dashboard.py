@@ -164,6 +164,28 @@ except Exception as e: print('masterplan load err', e)
 
 def occ_window(o):
     d=OCC_DATE.get(o); return (d-timedelta(days=56), d) if d else None
+JM_TIMELINE = defaultdict(list)
+try:
+    mwb = load_workbook(os.path.join(DL, 'H1.2026 MASTERPLAN  IDEA.xlsx'), data_only=True)
+    if 'TIMELINE' in mwb.sheetnames:
+        ws_t = mwb['TIMELINE']; m_str = None
+        for c in range(32, 60):
+            v5 = str(ws_t.cell(5, c).value or '').strip()
+            if v5: m_str = v5
+            v6 = str(ws_t.cell(6, c).value or '').strip()
+            jm = str(ws_t.cell(15, c).value or '').strip()
+            if jm and m_str and v6:
+                m_match = re.search(r'(\d+)', m_str); w_match = re.search(r'(\d+)', v6)
+                if m_match and w_match:
+                    mo = int(m_match.group(1)); yr = 2025 if mo >= 8 else 2026
+                    w1 = int(w_match.group(1)); ld = calendar.monthrange(yr,mo)[1]
+                    ws_date = date(yr,mo,min((w1-1)*7+1,ld))
+                    for _o in OCC_DATE:
+                        w = occ_window(_o)
+                        if w and w[0] <= ws_date <= w[1]:
+                            JM_TIMELINE[_o].append({'week': f'{m_str} {v6}', 'text': jm})
+    mwb.close()
+except Exception as e: print('jm timeline load err', e)
 week_start={sn:week_meta[sn]['rg'][0] for sn in week_meta if week_meta[sn]['rg']}
 def row_occasions(pr):
     ws=week_start.get(pr['week']); occs=[]
@@ -203,7 +225,7 @@ for o in OCC_ORDER:
     hier.append({'occasion':o,'occ_date':OCC_DATE[o].isoformat() if dated else None,
                  'quarter': quarter, 'month': month,
                  'window':[occ_window(o)[0].isoformat(),occ_window(o)[1].isoformat()] if dated else None,
-                 'masterplan':MASTER.get(o,[]),'jm_plan':jm_plan,
+                 'masterplan':MASTER.get(o,[]), 'jm_timeline':JM_TIMELINE.get(o, []), 'jm_plan':jm_plan,
                  'actuals':{'total':len(acts),'served':served,'served_pct':round(served/len(acts)*100) if (acts and dated) else None,'rows':rows}})
 plan['hierarchy']=hier
 
