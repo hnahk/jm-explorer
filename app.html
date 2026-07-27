@@ -242,7 +242,7 @@ document.getElementById('nav-dash').onclick = function() {
         document.getElementById('view-explorer').classList.add('active');
         document.getElementById('view-dashboard').classList.remove('active');
         if (codes && codes.length > 0) {
-            document.getElementById('search').value = codes.join(" ");
+            document.getElementById('search').value = codes.join(" | ");
             document.getElementById('search').dispatchEvent(new Event("input"));
         }
     };
@@ -486,12 +486,42 @@ function rowsFor(){
   const showNA=state.filters.some(f=>f.k==='bucket'&&f.val==='not-advertised');
   if(state.view==='designs'){
     let r=DES.filter(d=> showNA ? true : d.spend>0).filter(matchDesign);
-    if(state.q){const q=state.q.toLowerCase();r=r.filter(d=>((d.code||'')+' '+(d.full||'')+' '+(d.idea||'')).toLowerCase().includes(q));}
+    if(state.q){
+      const q=state.q.toLowerCase();
+      if(q.includes('|')){
+        const terms = q.split('|').map(x=>x.trim()).filter(Boolean);
+        r=r.filter(d=>{
+          const str = ((d.code||'')+' '+(d.full||'')+' '+(d.idea||'')).toLowerCase();
+          return terms.some(t=>str.includes(t));
+        });
+      } else {
+        const terms = q.split(/\\s+/).filter(Boolean);
+        r=r.filter(d=>{
+          const str = ((d.code||'')+' '+(d.full||'')+' '+(d.idea||'')).toLowerCase();
+          return terms.every(t=>str.includes(t));
+        });
+      }
+    }
     return r;
   } else {
     let r=CAMPFLAT.map(c=>({...c, profit:0.70*c.rev-c.spend, roas:roas(c.rev,c.spend), cpa:cpa(c.spend,c.orders), cpm:cpm(c.spend,c.impr), cpc:c.clk?c.spend/c.clk:null}));
     r=r.filter(c=>{const d=byCode[c.code]; return d && matchDesign(d);});
-    if(state.q){const q=state.q.toLowerCase();r=r.filter(c=>((c.name||'')+' '+(c.code||'')).toLowerCase().includes(q));}
+    if(state.q){
+      const q=state.q.toLowerCase();
+      if(q.includes('|')){
+        const terms = q.split('|').map(x=>x.trim()).filter(Boolean);
+        r=r.filter(c=>{
+          const str = ((c.name||'')+' '+(c.code||'')).toLowerCase();
+          return terms.some(t=>str.includes(t));
+        });
+      } else {
+        const terms = q.split(/\\s+/).filter(Boolean);
+        r=r.filter(c=>{
+          const str = ((c.name||'')+' '+(c.code||'')).toLowerCase();
+          return terms.every(t=>str.includes(t));
+        });
+      }
+    }
     return r;
   }
 }
