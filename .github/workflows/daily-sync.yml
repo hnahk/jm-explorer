@@ -50,12 +50,10 @@ jobs:
           python3 backend/etl.py
           python3 backend/build_dashboard_sql.py
           python3 backend/build_share.py
-          cp share.html index.html
-          cp dashboard_share.html dashboard.html
 
       - name: Commit & Push Live Updated Data
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.js data.json dash.js dash.json share.html dashboard_share.html index.html dashboard.html backend/raw/products.json backend/raw/campaigns.json backend/raw/orders.json
+          git add data.js data.json dash.js dash.json index.html execdashboard/index.html trace/index.html backend/raw/products.json backend/raw/campaigns.json backend/raw/orders.json
           git diff-index --quiet HEAD || (git commit -m "auto: daily WeLast catalog, campaigns & orders sync [skip ci]" && git push)
