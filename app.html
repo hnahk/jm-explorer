@@ -305,6 +305,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   let sel=H.find(h=>h.occasion==="Mother's Day")||H[0];
   let quartersAll = [...new Set(H.map(o=>o.quarter))].filter(q=>q!=='Ongoing');
   let selQ = (sel.quarter && sel.quarter !== 'Ongoing') ? sel.quarter : (quartersAll[0] || 'Ongoing');
+  let selWeek = null;
   function render(){
     let h=`<div class="card"><div class="split">
       <div><div class="sub">Ideas executed on-plan <span class="muted">(first-live in a planned week)</span></div><div class="big">${s.rate}%</div><div class="sub">${s.served.toLocaleString()} of ${s.designs.toLocaleString()} designs · advertised ${s.rate_adv}%</div></div>
@@ -342,10 +343,25 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     } else h+=`<div class="muted">No detailed masterplan sheet or timeline notes for this occasion.</div>`;
     h+=`</div>`;
     h+=`<div class="card"><h2 style="margin-top:0">② JM IDEA'S PLAN — detailed (${o.jm_plan.length} rows)${o.window?' · window '+o.window[0]+' → '+o.window[1]:''}</h2>
-      <div class="sub" style="margin-bottom:6px">Click a row to reveal the matched idea codes (matched by week + product + PIC).</div>
-      <div class="scroll"><table><thead><tr><th>Section</th><th>Product Type</th><th>Product</th><th>Niche / Idea Direction</th><th class="r">Qty</th><th>PIC</th><th class="r">Created</th><th>Pending</th><th class="r">Matched</th></tr></thead><tbody>`+
-      (o.jm_plan.length?o.jm_plan.map((r,i)=>`<tr class="prow" data-i="${i}" style="cursor:pointer"><td>${r.section||'—'}</td><td>${r.product_type||'—'}</td><td>${r.product||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${(r.niche||'').replace(/"/g,'')}">${r.niche||'—'}</td><td class="r num">${r.planned}</td><td>${r.pic||'—'}</td><td class="r num">${r.created}</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${(r.pending||'').replace(/"/g,'')}">${r.pending||''}</td><td class="r num">${r.matched.length}</td></tr><tr class="pdet" data-d="${i}" style="display:none"><td colspan="9" style="background:var(--panel2);white-space:normal;line-height:1.9"><div style="margin-bottom:8px"><button onclick='window.switchToExplorer(${JSON.stringify(r.matched.map(m=>m.full))})'>🔍 View ${r.matched.length} designs in Explorer</button></div>${r.matched.length?r.matched.map(m=>`${m.link?'<a href="'+m.link+'" target="_blank" rel="noopener">':''}${m.idea||m.full}${m.link?'</a>':''} <span class="muted num">(r${m.roas}${m.served===false?' · late':(m.served===true?' · ✓':'')} · ${money(m.spend)})</span>`).join(' &nbsp;·&nbsp; '):'<span class="muted">no matched idea codes for this row</span>'}</td></tr>`).join(''):`<tr><td colspan="9" class="muted">no plan rows mapped to this occasion window</td></tr>`)+
-      `</tbody></table></div></div>`;
+      <div class="sub" style="margin-bottom:6px">Click a row to reveal the matched idea codes (matched by week + product + PIC).</div>`;
+    
+    let plan_weeks = [...new Set(o.jm_plan.map(r=>r.week))];
+    if (!plan_weeks.includes(selWeek)) selWeek = plan_weeks[0];
+
+    if (o.jm_plan.length) {
+      h += `<div class="tabs" style="margin-bottom:12px">`;
+      plan_weeks.forEach(w => {
+          h += `<div class="tab w-tab ${w===selWeek?'on':''}" data-w="${w}">${w} <span class="muted num">${o.jm_plan.filter(x=>x.week===w).length}</span></div>`;
+      });
+      h += `</div>`;
+      let rows_to_show = o.jm_plan.filter(r=>r.week === selWeek);
+      h += `<div class="scroll"><table><thead><tr><th>Product</th><th>Niche / Idea Direction</th><th class="r">Idea Quantity</th><th class="r">Matched</th></tr></thead><tbody>`;
+      h += rows_to_show.map((r)=>`<tr class="prow" data-i="${o.jm_plan.indexOf(r)}" style="cursor:pointer"><td>${r.product||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${(r.niche||'').replace(/"/g,'')}">${r.niche||'—'}</td><td class="r num">${r.planned}</td><td class="r num">${r.matched.length}</td></tr><tr class="pdet" data-d="${o.jm_plan.indexOf(r)}" style="display:none"><td colspan="4" style="background:var(--panel2);white-space:normal;line-height:1.9"><div style="margin-bottom:8px"><button onclick='window.switchToExplorer(${JSON.stringify(r.matched.map(m=>m.full))})'>🔍 View ${r.matched.length} designs in Explorer</button></div>${r.matched.length?r.matched.map(m=>`${m.link?'<a href="'+m.link+'" target="_blank" rel="noopener">':''}${m.idea||m.full}${m.link?'</a>':''} <span class="muted num">(r${m.roas}${m.served===false?' · late':(m.served===true?' · ✓':'')} · ${money(m.spend)})</span>`).join(' &nbsp;·&nbsp; '):'<span class="muted">no matched idea codes for this row</span>'}</td></tr>`).join('');
+      h += `</tbody></table></div>`;
+    } else {
+      h += `<div class="scroll"><table><tbody><tr><td class="muted">no plan rows mapped to this occasion window</td></tr></tbody></table></div>`;
+    }
+    h += `</div>`;
     const a=o.actuals;
     h+=`<div class="card"><h2 style="margin-top:0">③ ACTUAL IDEAS — matched, with first-ad date vs the plan</h2>`;
     if(o.occ_date) h+=`<div class="hl"><b>${a.served_pct}%</b> of ${a.total} ${o.occasion} ideas launched their first ad <b>≥2 wks before</b> ${o.occ_date} — served the plan window.${a.served_pct>=80?' <b>Timing was not the problem here</b> — the loss is economics.':''}</div>`;
@@ -359,6 +375,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
       render();
     });
     document.querySelectorAll('#s-plan [data-o]').forEach(t=>t.onclick=()=>{sel=H.find(x=>x.occasion===t.dataset.o);render();});
+    document.querySelectorAll('#s-plan [data-w]').forEach(t=>t.onclick=()=>{selWeek=t.dataset.w;render();});
     document.querySelectorAll('#s-plan .prow').forEach(row=>row.onclick=()=>{const d=$('#s-plan .pdet[data-d="'+row.dataset.i+'"]');if(d)d.style.display=d.style.display==='none'?'table-row':'none';});
   }
   render();
