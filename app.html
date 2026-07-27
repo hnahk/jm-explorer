@@ -280,15 +280,19 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 (function(){
   const o=D.overview, f=o.funnel, p=o.p0;
   const maxsp=Math.max(...o.occasions.map(x=>x.spend));
-  let h=`<div class="card"><h2 style="margin-top:0">Funnel</h2><div class="funnel">`+
+  let h=`<div class="card"><h2 style="margin-top:0">Funnel Overview</h2><div class="funnel">`+
     [['Created',f.created],['Live',f.live],['Advertised',f.advertised],['Profitable',f.profitable]]
     .map(([a,b],i)=>`${i?'<span style="color:var(--muted)">▸</span>':''}<span class="fstage">${a}<b class="num">${b.toLocaleString()}</b></span>`).join('')+`</div>`;
-  h+=`<h2>Where the money lands</h2><div class="split">`+
+  h+=`<h2>Spend by P0 Category</h2><div class="split">`+
+    [['Top products by spend',p.prod],['Spend by product type',p.pt],['Spend by PIC',p.pic]]
+    .map(([l,t])=>`<div class="card" style="padding:10px 14px"><div class="sub" style="margin-bottom:6px">${l}</div><table><tbody>`+
+      t.map(b=>`<tr><td style="width:120px;max-width:120px;overflow:hidden;text-overflow:ellipsis">${b.label}</td><td style="width:80px">${bar(b.spend,p.maxsp)}</td><td class="r num">${b.pct_spend}%</td></tr>`).join('')+`</tbody></table></div>`).join('')+`</div>`;
+  h+=`<div class="card"><h2 style="margin-top:0">Performance by Category Status</h2><div class="split">`+
     [['winner','Winners','tg-win'],['loser','Conclusive losers','tg-lose'],['untestable','Untestable (<20 ord)','']].map(([b,lab,cl])=>{
       const x=p[b]; return `<div class="card" style="margin:0"><span class="tag ${cl||'tg-lose'}">${lab}</span><div style="margin-top:6px"><b class="num">${x.n}</b> designs · ${money(x.spend)} spend · <span class="num ${x.profit<0?'neg':'pos'}">${money(x.profit)}</span></div></div>`;
     }).join('')+`</div></div>`;
   // occasion table
-  h+=`<div class="card"><h2 style="margin-top:0">Financial by occasion & evergreen</h2>
+  h+=`<div class="card"><h2 style="margin-top:0">Financial Performance by Occasion</h2>
     <table><thead><tr><th>Occasion</th><th class="r">Spend</th><th>% spend</th><th class="r">Profit</th><th class="r">% of loss</th><th class="r">ROAS</th><th class="r">Designs</th></tr></thead><tbody>`+
     o.occasions.map(x=>`<tr><td>${x.name} ${x.evergreen?'<span class="tag tg-ev">evergreen</span>':''}</td>
       <td class="r num">${money(x.spend)}</td><td style="width:110px">${bar(x.pct_spend,maxsp/o.kpi.spend*100)} <span class="num" style="font-size:11px">${x.pct_spend}%</span></td>
@@ -332,7 +336,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     }
     h += `</div>`;
     const o=sel;
-    h+=`<div class="card"><h2 style="margin-top:0">① MASTERPLAN — high-level demand plan</h2>`;
+    h+=`<div class="card"><h2 style="margin-top:0">Demand Masterplan</h2>`;
     if(o.masterplan.length){
       h+=`<table><thead><tr><th>Sub-direction (angle)</th><th class="r">% planned</th><th class="r">Amazon search vol</th><th>Best rank</th></tr></thead><tbody>`+
         o.masterplan.map(m=>`<tr><td>${m.dir}</td><td class="r num">${m.pct!=null?m.pct+'%':'—'}</td><td class="r num">${m.searchvol?m.searchvol.toLocaleString():'—'}</td><td>${m.rank||'—'}</td></tr>`).join('')+`</tbody></table>`;
@@ -342,7 +346,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
         o.jm_timeline.map(m=>`<tr><td style="white-space:nowrap;font-weight:600;vertical-align:top">${m.week}</td><td style="white-space:normal;line-height:1.5">${m.text}</td></tr>`).join('')+`</tbody></table>`;
     } else h+=`<div class="muted">No detailed masterplan sheet or timeline notes for this occasion.</div>`;
     h+=`</div>`;
-    h+=`<div class="card"><h2 style="margin-top:0">② JM IDEA'S PLAN — detailed (${o.jm_plan.length} rows)${o.window?' · window '+o.window[0]+' → '+o.window[1]:''}</h2>
+    h+=`<div class="card"><h2 style="margin-top:0">Detailed Idea Plan (${o.jm_plan.length} rows)${o.window?' · window '+o.window[0]+' → '+o.window[1]:''}</h2>
       <div class="sub" style="margin-bottom:6px">Click a row to reveal the matched idea codes (matched by week + product + PIC).</div>`;
     
     let plan_weeks = [...new Set(o.jm_plan.map(r=>r.week))];
@@ -363,7 +367,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     }
     h += `</div>`;
     const a=o.actuals;
-    h+=`<div class="card"><h2 style="margin-top:0">③ ACTUAL IDEAS — matched, with first-ad date vs the plan</h2>`;
+    h+=`<div class="card"><h2 style="margin-top:0">Actual Performance (Matched Ideas)</h2>`;
     if(o.occ_date) h+=`<div class="hl"><b>${a.served_pct}%</b> of ${a.total} ${o.occasion} ideas launched their first ad <b>≥2 wks before</b> ${o.occ_date} — served the plan window.${a.served_pct>=80?' <b>Timing was not the problem here</b> — the loss is economics.':''}</div>`;
     h+=`<div class="scroll"><table><thead><tr><th>Idea</th><th>Product</th><th>Recipient</th><th>First ad</th><th class="r">Days before</th><th>Serves?</th><th class="r">Spend</th><th class="r">Profit</th><th class="r">ROAS</th></tr></thead><tbody>`+
       a.rows.map(r=>`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis" title="${(r.full||'')}">${lnk(r)}</td><td>${r.product}</td><td>${r.recipient||'—'}</td><td class="num">${r.d_ads||'—'}</td><td class="r num">${r.days_before!=null?r.days_before:'—'}</td><td>${o.occ_date?(r.served?'<span class="tag tg-win">✓</span>':'<span class="tag tg-lose">✗ late</span>'):'—'}</td><td class="r num">${money(r.spend)}</td><td class="r num ${r.profit<0?'neg':'pos'}">${money(r.profit)}</td><td class="r num" style="color:${r.roas>=1.43?'var(--good)':'var(--bad)'}">${r.roas}</td></tr>`).join('')+
@@ -384,7 +388,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 // ---------- ADS EFFICIENCY ----------
 (function(){
   const e=D.efficiency, maxn=Math.max(...e.roas_bins.map(b=>b.n));
-  let h=`<div class="card"><h2 style="margin-top:0">ROAS distribution (advertised designs)</h2>
+  let h=`<div class="card"><h2 style="margin-top:0">ROAS Distribution</h2>
     <div class="sub" style="margin-bottom:8px">Everything left of 1.43 loses money. Bars sized by # of designs; spend shown alongside.</div><table><tbody>`+
     e.roas_bins.map(b=>`<tr><td style="width:150px">${b.label}</td><td style="width:220px">${bar(b.n,maxn,b.label.includes('win')?'g':(b.label.includes('3.0+')?'g':''))}</td>
       <td class="r num">${b.n} designs</td><td class="r num">${money(b.spend)}</td><td class="r num ${b.profit<0?'neg':'pos'}">${money(b.profit)}</td></tr>`).join('')+
@@ -392,9 +396,9 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     <div class="hl"><b>${money(e.untestable_spend)} (${e.untestable_pct}% of spend)</b> went to <b>untestable</b> designs (&lt;20 orders) — sprayed too thin to ever conclude.</div>
     <div class="sub">Spend concentration: `+e.concentration.map(c=>`top ${c.pct_designs}% of designs = <b>${c.pct_spend}%</b> of spend`).join(' · ')+`</div></div>`;
   h+=`<div class="split">
-    <div class="card"><h2 style="margin-top:0">Best ideas (profit)</h2><table><tbody>`+
+    <div class="card"><h2 style="margin-top:0">Top Performers (by Profit)</h2><table><tbody>`+
       e.top.map(d=>`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${lnk(d)}</td><td class="r num">${d.roas}</td>${pcell(d.profit)}</tr>`).join('')+`</tbody></table></div>
-    <div class="card"><h2 style="margin-top:0">Worst ideas (profit)</h2><table><tbody>`+
+    <div class="card"><h2 style="margin-top:0">Lowest Performers (by Profit)</h2><table><tbody>`+
       e.bottom.map(d=>`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${lnk(d)}</td><td class="r num">${d.roas}</td>${pcell(d.profit)}</tr>`).join('')+`</tbody></table></div></div>`;
   $('#s-eff').innerHTML=h;
 })();
@@ -405,7 +409,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   const inwin=t[0], total=t.reduce((s,b)=>s+b.spend,0);
   let h=`<div class="card"><div class="sub">Occasion designs launched in-window (≥4 wks before the occasion date)</div>
     <div class="big">${total?Math.round(inwin.spend/total*100):0}%</div><div class="sub">of occasion ad-spend · ${D.timing_meta.occasion_designs.toLocaleString()} occasion designs with a dated occasion</div></div>`;
-  h+=`<div class="card"><h2 style="margin-top:0">Lead time — when the first ad launched vs the occasion</h2><table><tbody>`+
+  h+=`<div class="card"><h2 style="margin-top:0">First Ad Launch vs Occasion Date</h2><table><tbody>`+
     t.map(b=>`<tr><td style="width:200px">${b.label}</td><td style="width:220px">${bar(b.spend,maxsp)}</td><td class="r num">${b.n} designs</td><td class="r num">${money(b.spend)}</td><td class="r num ${b.profit<0?'neg':'pos'}">${money(b.profit)}</td></tr>`).join('')+
     `</tbody></table><div class="hl">If most spend is <b>in-window</b> and still losing, the problem is <b>offer/economics</b>, not timing. If most is <b>late/missed</b>, timing is a real driver.</div></div>`;
   $('#s-timing').innerHTML=h;
