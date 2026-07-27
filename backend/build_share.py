@@ -30,19 +30,34 @@ def cr(code, r):
     return row
 camps = {code: [cr(code, r) for r in rows] for code, rows in J["campaigns"].items() if code in keepc}
 
-slim = {"summary": J["summary"], "edges": J["edges"], "recipient_plan": J["recipient_plan"], "plan_weeks": J["plan_weeks"],
-        "designs": designs, "campaigns": camps,
-        "note": "SHARED: all advertised designs (never-advertised catalog designs omitted). Ad-creative thumbnails kept for winners+losers only; full set is in the local app.html."}
-slimjson = json.dumps(slim, ensure_ascii=False, separators=(",", ":"))
+datajson = json.dumps(designs, ensure_ascii=False, separators=(",", ":"))
+campjson = json.dumps(camps, ensure_ascii=False, separators=(",", ":"))
 dashjson = open(os.path.join(ROOT, "dash.json"), encoding="utf-8").read()
 
-h = open(os.path.join(ROOT, "app.html"), encoding="utf-8").read()
-# Replace the script src tags with inline data
-h = h.replace('<script src="dash.js"></script>', f'<script>window.DASH={dashjson};</script>')
-h = h.replace('<script src="data.js"></script>', f'<script>window.JM={slimjson};</script>')
-
 banner = '<div style="background:var(--warnbg);color:var(--warn);padding:6px 18px;font-size:12px;border-bottom:1px solid var(--line)">Shared view · all advertised designs · ad-creative thumbnails shown for winners + losers</div>'
-h = h.replace('<body>', '<body>\n' + banner)
 
-open(os.path.join(ROOT, "share.html"), "w", encoding="utf-8").write(h)
-print("share.html (unified): %.2f MB (designs %d, campaigns %d)" % (os.path.getsize(os.path.join(ROOT, "share.html"))/1e6, len(designs), sum(len(v) for v in camps.values())))
+# 1. Build execdashboard
+os.makedirs(os.path.join(ROOT, "execdashboard"), exist_ok=True)
+ed = open(os.path.join(ROOT, "execdashboard.html"), encoding="utf-8").read()
+ed = ed.replace('<script src="dash.js"></script>', f'<script>window.DASH={dashjson};</script>')
+ed = ed.replace('<script src="data.js"></script>', '')
+ed = ed.replace('<body>', '<body>\n' + banner)
+open(os.path.join(ROOT, "execdashboard", "index.html"), "w", encoding="utf-8").write(ed)
+
+# 2. Build trace
+os.makedirs(os.path.join(ROOT, "trace"), exist_ok=True)
+tr = open(os.path.join(ROOT, "trace.html"), encoding="utf-8").read()
+tr = tr.replace('<script src="dash.js"></script>', f'<script>window.DASH={dashjson};</script>')
+tr = tr.replace('<script src="data.js"></script>', f'<script>window.DATA={datajson}; window.CAMP={campjson};</script>')
+tr = tr.replace('<body>', '<body>\n' + banner)
+open(os.path.join(ROOT, "trace", "index.html"), "w", encoding="utf-8").write(tr)
+
+# 3. Build root index.html redirect
+redirect_html = '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=execdashboard/"></head><body></body></html>'
+open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8").write(redirect_html)
+
+print("execdashboard: %.2f MB, trace: %.2f MB (designs %d, campaigns %d)" % (
+    os.path.getsize(os.path.join(ROOT, "execdashboard", "index.html"))/1e6,
+    os.path.getsize(os.path.join(ROOT, "trace", "index.html"))/1e6,
+    len(designs), sum(len(v) for v in camps.values())
+))
