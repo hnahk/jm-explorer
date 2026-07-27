@@ -198,7 +198,10 @@ for o in OCC_ORDER:
            'recipient':(d['recipient'] or '')[:18],'d_ads':d.get('d_ads'),'d_live':d.get('d_live'),
            'days_before':d.get('days_before_occ'),'served':(d.get('days_before_occ') is not None and d['days_before_occ']>=14),'link':d.get('link') or '',
            'spend':round(d['spend']),'profit':round(d['profit']),'roas':d['roas']} for d in sorted(acts,key=lambda d:-d['spend'])]
+    quarter = f"Q{(OCC_DATE[o].month-1)//3 + 1} {OCC_DATE[o].year}" if dated else "Ongoing"
+    month = OCC_DATE[o].strftime("%B") if dated else "All Year"
     hier.append({'occasion':o,'occ_date':OCC_DATE[o].isoformat() if dated else None,
+                 'quarter': quarter, 'month': month,
                  'window':[occ_window(o)[0].isoformat(),occ_window(o)[1].isoformat()] if dated else None,
                  'masterplan':MASTER.get(o,[]),'jm_plan':jm_plan,
                  'actuals':{'total':len(acts),'served':served,'served_pct':round(served/len(acts)*100) if (acts and dated) else None,'rows':rows}})

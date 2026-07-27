@@ -130,6 +130,12 @@ td.r,th.r{text-align:right}
 .close{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:7px;padding:4px 10px;font-size:12px}
 a{color:var(--accent)}
 
+.hier-tabs { display:flex; flex-direction:column; gap:16px; margin: 16px 0; }
+.q-group { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--panel2); }
+.q-title { font-weight: 700; font-size: 14px; margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.m-group { margin-bottom: 12px; }
+.m-group:last-child { margin-bottom: 0; }
+.m-title { font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* Global Nav */
 .global-nav {
@@ -301,7 +307,25 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     let h=`<div class="card"><div class="split">
       <div><div class="sub">Ideas executed on-plan <span class="muted">(first-live in a planned week)</span></div><div class="big">${s.rate}%</div><div class="sub">${s.served.toLocaleString()} of ${s.designs.toLocaleString()} designs · advertised ${s.rate_adv}%</div></div>
       <div><div class="sub">Idea plan total (Dec 2025 → now)</div><div class="big num">${pl.plan_total_planned.toLocaleString()}</div><div class="sub">planned · ${pl.plan_total_created.toLocaleString()} created (${Math.round(pl.plan_total_created/pl.plan_total_planned*100)}% self-reported)</div></div></div></div>`;
-    h+=`<div class="tabs" style="margin:12px 0 0">`+H.map(o=>`<div class="tab ${o===sel?'on':''}" data-o="${o.occasion}">${o.occasion} <span class="muted num">${o.actuals.total}</span></div>`).join('')+`</div>`;
+    let grouped = {};
+    H.forEach(o => {
+      let q = o.quarter || 'Ongoing';
+      let m = o.month || 'All Year';
+      if(!grouped[q]) grouped[q] = {};
+      if(!grouped[q][m]) grouped[q][m] = [];
+      grouped[q][m].push(o);
+    });
+    h += `<div class="hier-tabs">`;
+    for(const q in grouped) {
+      h += `<div class="q-group"><div class="q-title">${q}</div>`;
+      for(const m in grouped[q]) {
+        h += `<div class="m-group"><div class="m-title">${m}</div><div class="tabs">`;
+        h += grouped[q][m].map(o=>`<div class="tab ${o===sel?'on':''}" data-o="${o.occasion}">${o.occasion} <span class="muted num">${o.actuals.total}</span></div>`).join('');
+        h += `</div></div>`;
+      }
+      h += `</div>`;
+    }
+    h += `</div>`;
     const o=sel;
     h+=`<div class="card"><h2 style="margin-top:0">① MASTERPLAN — high-level demand plan</h2>`;
     if(o.masterplan.length){
