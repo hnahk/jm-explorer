@@ -60,17 +60,30 @@ def build_dashboard():
     # Occasions stats
     c.execute('''
         SELECT occasion, SUM(spend) as spend, SUM(rev) as rev, COUNT(*) as cnt 
-        FROM designs WHERE occasion != 'Evergreen' AND occasion IS NOT NULL 
+        FROM designs WHERE occasion IS NOT NULL 
         GROUP BY occasion ORDER BY spend DESC
     ''')
+    raw_occs = c.fetchall()
+    
+    tot_loss = -sum(min(0, 0.70*(r['rev'] or 0) - (r['spend'] or 0)) for r in raw_occs) or 1
+    
     occasions = []
-    for r in c.fetchall():
+    for r in raw_occs:
+        sp = r['spend'] or 0
+        rv = r['rev'] or 0
+        pr = 0.70 * rv - sp
+        occ_name = r['occasion']
+        
         occasions.append({
-            "occasion": r['occasion'],
-            "spend": round(r['spend']),
-            "profit": round(0.70 * r['rev'] - r['spend']),
-            "roas": round(r['rev'] / r['spend'], 2) if r['spend'] else 0,
-            "advertised": r['cnt']
+            "name": occ_name,
+            "evergreen": occ_name == "Evergreen",
+            "spend": round(sp),
+            "rev": round(rv),
+            "profit": round(pr),
+            "roas": round(rv / sp, 2) if sp else 0,
+            "n": r['cnt'],
+            "pct_spend": round(sp / tot_spend * 100, 1) if tot_spend else 0,
+            "pct_loss": round(-pr / tot_loss * 100, 1) if pr < 0 else 0
         })
         
     overview = {
@@ -214,6 +227,7 @@ def build_dashboard():
             "occ_date": occ_meta['occ_date'],
             "quarter": quarter,
             "month": month,
+            "window": [w1.isoformat(), w2.isoformat()] if dated else None,
             "jm_plan": jm_plan,
             "acts": rows
         })
