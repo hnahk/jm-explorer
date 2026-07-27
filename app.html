@@ -303,27 +303,31 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 (function(){
   const pl=D.plan, s=pl.served, H=pl.hierarchy;
   let sel=H.find(h=>h.occasion==="Mother's Day")||H[0];
+  let quartersAll = [...new Set(H.map(o=>o.quarter))].filter(q=>q!=='Ongoing');
+  let selQ = (sel.quarter && sel.quarter !== 'Ongoing') ? sel.quarter : (quartersAll[0] || 'Ongoing');
   function render(){
     let h=`<div class="card"><div class="split">
       <div><div class="sub">Ideas executed on-plan <span class="muted">(first-live in a planned week)</span></div><div class="big">${s.rate}%</div><div class="sub">${s.served.toLocaleString()} of ${s.designs.toLocaleString()} designs · advertised ${s.rate_adv}%</div></div>
       <div><div class="sub">Idea plan total (Dec 2025 → now)</div><div class="big num">${pl.plan_total_planned.toLocaleString()}</div><div class="sub">planned · ${pl.plan_total_created.toLocaleString()} created (${Math.round(pl.plan_total_created/pl.plan_total_planned*100)}% self-reported)</div></div></div></div>`;
-    let grouped = {};
-    H.forEach(o => {
-      let q = o.quarter || 'Ongoing';
-      let m = o.month || 'All Year';
-      if(!grouped[q]) grouped[q] = {};
-      if(!grouped[q][m]) grouped[q][m] = [];
-      grouped[q][m].push(o);
+    h += `<div class="tabs" style="margin:16px 0 20px;">`;
+    quartersAll.forEach(q => {
+        h += `<div class="tab ${q===selQ?'on':''}" data-q="${q}">${q}</div>`;
     });
-    h += `<div class="hier-tabs">`;
-    for(const q in grouped) {
-      h += `<div class="q-group"><div class="q-title">${q}</div>`;
-      for(const m in grouped[q]) {
-        h += `<div class="m-group"><div class="m-title">${m}</div><div class="tabs">`;
-        h += grouped[q][m].map(o=>`<div class="tab ${o===sel?'on':''}" data-o="${o.occasion}">${o.occasion} <span class="muted num">${o.actuals.total}</span></div>`).join('');
+    h += `</div>`;
+    
+    let H_filtered = H.filter(o => o.quarter === selQ || o.quarter === 'Ongoing');
+    let grouped = {};
+    H_filtered.forEach(o => {
+        let m = o.month || 'All Year';
+        if(!grouped[m]) grouped[m] = [];
+        grouped[m].push(o);
+    });
+
+    h += `<div class="hier-tabs" style="margin:0 0 20px;">`;
+    for(const m in grouped) {
+        h += `<div class="m-group"><div class="m-title">${m==='All Year'?'Evergreen':m}</div><div class="tabs" style="margin-top:6px">`;
+        h += grouped[m].map(o=>`<div class="tab ${o===sel?'on':''}" data-o="${o.occasion}">${o.occasion} <span class="muted num">${o.actuals.total}</span></div>`).join('');
         h += `</div></div>`;
-      }
-      h += `</div>`;
     }
     h += `</div>`;
     const o=sel;
@@ -345,6 +349,11 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
       a.rows.map(r=>`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis" title="${(r.full||'')}">${lnk(r)}</td><td>${r.product}</td><td>${r.recipient||'—'}</td><td class="num">${r.d_ads||'—'}</td><td class="r num">${r.days_before!=null?r.days_before:'—'}</td><td>${o.occ_date?(r.served?'<span class="tag tg-win">✓</span>':'<span class="tag tg-lose">✗ late</span>'):'—'}</td><td class="r num">${money(r.spend)}</td><td class="r num ${r.profit<0?'neg':'pos'}">${money(r.profit)}</td><td class="r num" style="color:${r.roas>=1.43?'var(--good)':'var(--bad)'}">${r.roas}</td></tr>`).join('')+
       `</tbody></table></div><div class="sub" style="margin-top:6px">All ${a.rows.length} advertised ideas for this occasion, sorted by spend. Spend = sum of every campaign under the idea code.</div></div>`;
     $('#s-plan').innerHTML=h;
+    document.querySelectorAll('#s-plan [data-q]').forEach(t=>t.onclick=()=>{
+      selQ = t.dataset.q;
+      sel = H.find(x=>x.quarter===selQ) || sel;
+      render();
+    });
     document.querySelectorAll('#s-plan [data-o]').forEach(t=>t.onclick=()=>{sel=H.find(x=>x.occasion===t.dataset.o);render();});
     document.querySelectorAll('#s-plan .prow').forEach(row=>row.onclick=()=>{const d=$('#s-plan .pdet[data-d="'+row.dataset.i+'"]');if(d)d.style.display=d.style.display==='none'?'table-row':'none';});
   }
