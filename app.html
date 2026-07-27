@@ -351,7 +351,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     if (o.jm_plan.length) {
       h += `<div class="tabs" style="margin-bottom:12px">`;
       plan_weeks.forEach(w => {
-          h += `<div class="tab w-tab ${w===selWeek?'on':''}" data-w="${w}">${w} <span class="muted num">${o.jm_plan.filter(x=>x.week===w).length}</span></div>`;
+          h += `<div class="tab w-tab ${w===selWeek?'on':''}" data-w="${w}">${w} <span class="muted num">${o.jm_plan.filter(x=>x.week===w).reduce((s,r)=>s+(r.planned||0),0)}</span></div>`;
       });
       h += `</div>`;
       let rows_to_show = o.jm_plan.filter(r=>r.week === selWeek);
