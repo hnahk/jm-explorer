@@ -31,8 +31,9 @@ RAW  = os.path.join(HERE, "raw")
 OUT_JS   = os.path.join(HERE, "..", "data.js")
 OUT_JSON = os.path.join(HERE, "..", "data.json")
 DL = os.path.expanduser("~/Downloads")
-PROD_XLSX  = os.path.join(DL, "WorkFlows 2026 1.0_\U0001f4a1 Product Table_khanh.xlsx")
-media_matches = glob.glob(os.path.join(DL, "WorkFlows 2026 1.0_Media Table 1.0_khanh*.xlsx"))
+prod_matches = glob.glob(os.path.join(DL, "idea*.xlsx")) + glob.glob(os.path.join(DL, "WorkFlows*Product Table*.xlsx"))
+PROD_XLSX = max(prod_matches, key=os.path.getmtime) if prod_matches else None
+media_matches = glob.glob(os.path.join(DL, "media*.xlsx")) + glob.glob(os.path.join(DL, "WorkFlows*Media Table*.xlsx"))
 MEDIA_XLSX = max(media_matches, key=os.path.getmtime) if media_matches else None
 PLAN_XLSX  = os.path.join(DL, "JM Idea's Plan .xlsx")
 
@@ -159,7 +160,7 @@ def match_week(d):
 # ---------- 2. IDEA + DESIGN (Product Table) ----------
 prod = {}
 cache_prod_file = os.path.join(RAW, "cache_prod.json")
-if os.path.exists(PROD_XLSX):
+if PROD_XLSX and os.path.exists(PROD_XLSX):
     wb = load_workbook(PROD_XLSX, data_only=True); ws = wb[wb.sheetnames[0]]
     for r in range(2, ws.max_row + 1):
         c = dcode(ws.cell(r, 2).value)
