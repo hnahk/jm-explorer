@@ -409,7 +409,7 @@ $('#theme-dash').onclick=()=>{const c=document.documentElement.getAttribute('dat
 
 // Explorer Logic
 (() => {
-const D = window.JM, DES = D.designs, CAMP = D.campaigns, PLAN = D.plan_weeks;
+const D = window.DASH, DES = window.DATA, CAMP = window.CAMP, PLAN = D.plan.week_meta;
 const byCode = Object.fromEntries(DES.map(d=>[d.code,d]));
 // flat campaign list for the campaigns view (reverse trace)
 const CAMPFLAT = [];
@@ -438,7 +438,7 @@ function header(){
   $('#funnel').innerHTML='<span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">Funnel</span>'+
     [['Created',f.created],['Live',f.live],['Advertised',f.advertised],['Profitable',f.profitable]]
     .map(([k,v],i)=>`${i?'<span class="arrow">▸</span>':''}<span class="fstage">${k} <b class="num">${v.toLocaleString()}</b></span>`).join('');
-  const p=s.p0, chips=[['winner','Winners',p.winner],['loser','Conclusive losers',p.loser],['untestable','Untestable <20 ord',p.untestable]];
+  const p=D.overview.p0, chips=[['winner','Winners',p.winner],['loser','Conclusive losers',p.loser],['untestable','Untestable <20 ord',p.untestable]];
   $('#p0').innerHTML='<span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;align-self:center">P0 buckets ▸ click to filter</span>'+
     chips.map(([b,lab,v])=>`<span class="chip" data-b="${b}"><span class="pill b-${b}">${lab}</span><b class="num">${v.n}</b><span class="num ${v.profit<0?'neg':'pos'}">${money(v.profit)}</span></span>`).join('');
   document.querySelectorAll('#p0 .chip').forEach(c=>c.onclick=()=>{const b=c.dataset.b;state.filters=state.filters.filter(f=>f.k!=='bucket');state.filters.push({k:'bucket',val:b});state.view='designs';state.page=0;syncTabs();renderChips();render();});

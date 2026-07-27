@@ -41,6 +41,7 @@ def build_dashboard():
     row = c.fetchone()
     tot_spend = row['sp'] or 0
     tot_rev = row['rv'] or 0
+    adv_count = row['n'] or 0
     tot_profit = (0.70 * tot_rev) - tot_spend
     roas = round(tot_rev / tot_spend, 2) if tot_spend else 0
     c.execute('SELECT COUNT(*) as n FROM designs')
@@ -109,7 +110,7 @@ def build_dashboard():
     OCC_ORDER = ["Valentine", "Easter", "Mother's Day", "Graduation", "Father's Day", "4th/Patriotic", "Back to School", "World Cup", "Christmas", "Evergreen"]
     
     c.execute("SELECT * FROM occasions")
-    occ_map = {r['name']: r for r in c.fetchall()}
+    occ_map = {r['name']: dict(r) for r in c.fetchall()}
     
     tot_served = 0
     tot_act = 0
@@ -231,7 +232,12 @@ def build_dashboard():
             "month": month,
             "window": [w1.isoformat(), w2.isoformat()] if dated else None,
             "jm_plan": jm_plan,
-            "acts": rows
+            "actuals": {
+                "total": len(rows),
+                "served": sum(1 for r in rows if r['served']),
+                "served_pct": round(sum(1 for r in rows if r['served']) / len(rows) * 100) if (rows and dated) else None,
+                "rows": rows
+            }
         })
         
     # Master & Timeline
@@ -253,6 +259,38 @@ def build_dashboard():
     weeks = {r['week']: dict(r) for r in c.fetchall()}
     weeks_sorted = sorted([k for k,v in weeks.items() if v['start_date']], key=lambda k: weeks[k]['start_date'])
     
+    # ---------- 3. ADS EFFICIENCY ----------
+    c.execute('SELECT * FROM designs WHERE spend > 0')
+    ADV = [dict(r) for r in c.fetchall()]
+    
+    bins=[("ROAS 0–0.5",0,0.5),("0.5–1.0",0.5,1.0),("1.0–1.43 (loss)",1.0,1.43),("1.43–2.0 (win)",1.43,2.0),("2.0–3.0",2.0,3.0),("3.0+",3.0,99)]
+    roas_bins=[]
+    for lab,lo,hi in bins:
+        grp=[d for d in ADV if lo<=d["roas"]<hi]
+        roas_bins.append({"label":lab,"n":len(grp),"spend":round(sum(d["spend"] for d in grp)),"profit":round(sum(d["profit"] for d in grp))})
+    
+    # spend concentration
+    sd=sorted(ADV,key=lambda d:-d["spend"]); cum=0; conc=[]
+    for i,d in enumerate(sd):
+        cum+=d["spend"]
+        if i in (int(len(sd)*0.01),int(len(sd)*0.05),int(len(sd)*0.1),int(len(sd)*0.25),int(len(sd)*0.5)):
+            conc.append({"pct_designs":round((i+1)/len(sd)*100),"pct_spend":round(cum/tot_spend*100) if tot_spend else 0})
+            
+    untest_spend=sum(d["spend"] for d in ADV if d["bucket"]=="untestable")
+    byprofit=sorted(ADV,key=lambda d:-d["profit"])
+    slim=lambda d:{"full":d.get("full_code") or d["code"],"idea":d["niche"] or '',"link":d.get("link") or "","occasion":d["occasion"],"spend":round(d["spend"]),"profit":round(d["profit"]),"roas":d["roas"],"orders":d["orders"],"bucket":d["bucket"]}
+    efficiency={"roas_bins":roas_bins,"concentration":conc,"untestable_spend":round(untest_spend),
+                "untestable_pct":round(untest_spend/tot_spend*100) if tot_spend else 0,"top":[slim(d) for d in byprofit[:15]],"bottom":[slim(d) for d in byprofit[-15:][::-1]]}
+
+    # ---------- 4. TIMING (occasion lead-time) ----------
+    tbins=[("≥4 wks before (in-window)",28,999),("2–4 wks before",14,28),("0–2 wks (late)",0,14),("after occasion (missed)",-999,0)]
+    timing=[]
+    occ_adv=[d for d in ADV if d["occasion"] and occ_map.get(d['occasion'], {}).get('occ_date') and d.get("days_before_occ") is not None]
+    for lab,lo,hi in tbins:
+        grp=[d for d in occ_adv if lo<=d["days_before_occ"]<hi] if lo!=-999 else [d for d in occ_adv if d["days_before_occ"]<0]
+        timing.append({"label":lab,"n":len(grp),"spend":round(sum(d["spend"] for d in grp)),"profit":round(sum(d["profit"] for d in grp))})
+    timing_meta={"occasion_designs":len(occ_adv)}
+
     dash = {
         "overview": overview,
         "plan": {
@@ -260,13 +298,20 @@ def build_dashboard():
             "master": master,
             "timeline": timeline,
             "served": {
-                "rate": round(tot_served / tot_act * 100) if tot_act else 0,
+                "rate": round(tot_served / adv_count * 100) if adv_count else 0,
                 "served": tot_served,
-                "actual": tot_act
+                "designs": tot_act,
+                "advertised": adv_count,
+                "rate_adv": round(tot_served / adv_count * 100) if adv_count else 0
             },
             "weeks": weeks_sorted,
-            "week_meta": weeks
-        }
+            "week_meta": weeks,
+            "plan_total_planned": sum(m.get('planned') or 0 for m in weeks.values()),
+            "plan_total_created": sum(m.get('created') or 0 for m in weeks.values())
+        },
+        "efficiency": efficiency,
+        "timing": timing,
+        "timing_meta": timing_meta
     }
     
     with open(os.path.join(ROOT, "dash.json"), "w") as f:
