@@ -47,6 +47,8 @@ jobs:
       - name: Rebuild Explorer & Dashboard Standalone Files
         run: |
           python3 backend/build.py
+          python3 backend/etl.py
+          python3 backend/build_dashboard_sql.py
           python3 backend/build_share.py
           cp share.html index.html
           cp dashboard_share.html dashboard.html
