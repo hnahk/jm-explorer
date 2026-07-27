@@ -312,7 +312,7 @@ for c in sorted(codes):
         'days_before_occ': (date.fromisoformat(OCC_DATE[occ]) - ads).days if (occ in OCC_DATE and ads) else None,
         'spend': round(sp, 2), 'rev': round(rv, 2), 'profit': round(0.70 * rv - sp, 2),
         'roas': round(rv / sp, 3) if sp else 0, 'orders': od,
-        'cpa': round(sp / od, 2) if od else None, 'ncamp': len(camp_by_code.get(c, [])),
+        'cpa': round(sp / od, 2) if od else None, 'ncamp': len(camp_by_code.get(c, [])), 'ncamp_img': sum(1 for r in _cs if not r.get('media_id')), 'ncamp_vid': sum(1 for r in _cs if r.get('media_id')),
         'bucket': bucket(sp, rv, od),
         'shop_orders': shop_orders, 'shop_net_rev': round(shop_net_rev, 2), 'shop_net_aov': round(shop_net_aov, 2), 'fbt': fbt
     })

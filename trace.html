@@ -256,7 +256,8 @@ const FIELDS=[
   {k:'bucket',label:'Bucket',type:'cat',get:d=>d.bucket},
   {k:'d_idea',label:'Idea done date',type:'month',get:d=>d.d_idea},
   {k:'d_live',label:'Listing live date',type:'month',get:d=>d.d_live},
-  {k:'d_ads',label:'First campaign date',type:'month',get:d=>d.d_ads}
+  {k:'d_ads',label:'First campaign date',type:'month',get:d=>d.d_ads},
+  {k:'has_vid',label:'Has Video Cam',type:'cat',get:d=>d.ncamp_vid>0?'Yes':'No'}
 ];
 function fieldOptions(fld){
   if(fld.type==='month') return distinct(DES.map(d=>{const v=fld.get(d);return v?String(v).slice(0,7):null;}));
@@ -342,6 +343,7 @@ function render(){
     if(k==='bucket')return `<td><span class="pill b-${v}">${v}</span></td>`;
     if(['spend','rev','profit'].includes(k))v=(v==null?'':money(v)); else if(['cpa','cpm','cpc'].includes(k))v=(v==null?'':money2(v));
     else if(k==='roas')v=(v?d.roas.toFixed(2):'');
+    else if(k==='ncamp')v=((d.ncamp_vid||0)>0?d.ncamp_vid+'🎬 ':'')+((d.ncamp_img||0)>0?d.ncamp_img+'🖼️ ':'')+(v===0?'0':'');
     else if(k==='code'){const fc=(byCode[d.code]&&byCode[d.code].full)||d.full||v; v=`<span class="mono" title="${d.code}">${fc}</span>`;}
     else if(k==='idea'||k==='name')v=`<span title="${(''+ (d[k]||'')).replace(/"/g,'')}">${(''+(d[k]||'')).slice(0,44)}</span>`;
     const cls=(k==='profit'&&d.profit!=null)?(d.profit<0?'neg':'pos'):'';
