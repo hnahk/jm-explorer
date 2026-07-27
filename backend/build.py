@@ -196,7 +196,8 @@ for p in cat:
                         'type': p.get('marketProductType'),
                         'link': 'https://joymade.co/products/' + (p.get('handle') or ''),
                         'full': hf.group().upper() if hf else None,
-                        'occ': occ_canon(p.get('tags'))})
+                        'occ': occ_canon(p.get('tags')),
+                        'title': p.get('title')})
 
 # ---------- 4. MEDIA (1 idea -> many videos) ----------
 media = defaultdict(list)   # code -> [ {date, video, tb, link} ]
@@ -299,7 +300,7 @@ for c in sorted(codes):
     fbt = [k for k, v in sorted(sst['items'].items(), key=lambda x: -x[1])[:3]]
 
     designs.append({
-        'code': c, 'has_idea': c in prod, 'full': (prod.get(c,{}).get('full_code') or (catc.get(c,{}) or {}).get('full') or camp_full.get(c) or c), 'idea': p.get('idea_name') or '', 'creator': p.get('creator') or '',
+        'code': c, 'has_idea': c in prod, 'full': (prod.get(c,{}).get('full_code') or (catc.get(c,{}) or {}).get('full') or camp_full.get(c) or c), 'idea': p.get('idea_name') or ct.get('title') or '', 'creator': p.get('creator') or '',
         'occasion': occ, 'niche': p.get('niche') or '', 'recipient': p.get('recipient') or '', 'rec': canon_rec(p.get('recipient')),
         'persona': p.get('persona') or '', 'product': ct.get('type') or (p.get('product') or ''),
         'link': ct.get('link') or '', 'plan_week': pw if pw in plan_weeks else None, 'plan_via': pv,
